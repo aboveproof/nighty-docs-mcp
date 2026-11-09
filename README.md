@@ -52,6 +52,19 @@ The server also publishes each indexed text file as an MCP resource under the
 `nighty-docs:///` URI scheme. Tool responses include links to the matching files
 on GitHub.
 
+## Built-in NightyScript context
+
+The MCP handshake identifies this as a NightyScript development server. It tells
+compatible clients to treat requests as code for Nighty's embedded Python
+runtime, search the official documentation before drafting, use Nighty's
+injected objects, and avoid unsupported `nighty` or `discord.py` imports.
+
+The server also publishes `nighty-docs:///runtime-context`, a short reference
+that clients can read whenever they need the runtime rules again. It explains
+that Nighty-specific terms describe the framework and that requests should be
+judged by their actual behavior. This context does not override a client's
+safety or privacy rules.
+
 ## Client setup
 
 Nighty Docs MCP uses Streamable HTTP and does not require authentication.

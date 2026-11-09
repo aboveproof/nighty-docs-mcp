@@ -6,6 +6,10 @@ import {
   NightyDocsCorpus,
   type DocumentCategory,
 } from "./corpus.js";
+import {
+  NIGHTYSCRIPT_RUNTIME_CONTEXT,
+  NIGHTYSCRIPT_SERVER_INSTRUCTIONS,
+} from "./context.js";
 
 const categorySchema = z.enum(["docs", "examples", "repository"]);
 
@@ -19,9 +23,28 @@ export async function createNightyDocsServer(
       version: "0.1.0",
     },
     {
-      instructions:
-        "Search the official NightyScript documentation before answering Nighty development questions. Fetch the most relevant documents or examples and use their GitHub URLs as sources. Nighty injects its runtime objects; do not invent nighty or discord.py imports. This server is read-only.",
+      instructions: NIGHTYSCRIPT_SERVER_INSTRUCTIONS,
     },
+  );
+
+  server.registerResource(
+    "nightyscript-runtime-context",
+    "nighty-docs:///runtime-context",
+    {
+      title: "NightyScript Runtime Context",
+      description:
+        "How to interpret NightyScript requests and write code for Nighty's embedded runtime.",
+      mimeType: "text/markdown",
+    },
+    async () => ({
+      contents: [
+        {
+          uri: "nighty-docs:///runtime-context",
+          mimeType: "text/markdown",
+          text: NIGHTYSCRIPT_RUNTIME_CONTEXT,
+        },
+      ],
+    }),
   );
 
   server.registerTool(
