@@ -1,0 +1,222 @@
+<div align="center">
+  <h1>Nighty Docs MCP</h1>
+  <p>Model Context Protocol access to the official NightyScript documentation and examples.</p>
+
+  <p>
+    <a href="https://github.com/aboveproof/nighty-docs-mcp/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/aboveproof/nighty-docs-mcp/actions/workflows/ci.yml/badge.svg"></a>
+    <a href="./LICENSE"><img alt="GPL-3.0 license" src="https://img.shields.io/badge/license-GPL--3.0-5865F2.svg"></a>
+    <img alt="Node.js 20 or newer" src="https://img.shields.io/badge/node-%3E%3D20-339933.svg">
+    <img alt="MCP transport: Streamable HTTP" src="https://img.shields.io/badge/MCP-Streamable_HTTP-F59E0B.svg">
+  </p>
+
+  <p>
+    <a href="https://github.com/aboveproof/nighty-docs">Source documentation</a>
+    ·
+    <a href="https://nighty-mcp.niggy.lol/mcp">Hosted endpoint</a>
+    ·
+    <a href="./CONTRIBUTING.md">Contributing</a>
+  </p>
+</div>
+
+---
+
+Nighty Docs MCP serves the contents of
+[`aboveproof/nighty-docs`](https://github.com/aboveproof/nighty-docs) through a
+read-only MCP endpoint. It covers the reference guides, troubleshooting notes,
+and example scripts stored in that repository.
+
+> [!NOTE]
+> The `nighty-docs` repository remains the source of truth. This project reads
+> its files without changing their content or presentation.
+
+## Endpoint
+
+| Service | URL |
+| :--- | :--- |
+| MCP | `https://nighty-mcp.niggy.lol/mcp` |
+| Health check | `https://nighty-mcp.niggy.lol/` |
+| Source documents | [`github.com/aboveproof/nighty-docs`](https://github.com/aboveproof/nighty-docs) |
+
+The hosted service requires no account or API key. Self-hosted instances use the
+same protocol and tools.
+
+## Tools
+
+| Tool | Purpose |
+| :--- | :--- |
+| `search` | Search guides and example scripts by phrase or topic |
+| `fetch` | Read one file by its repository-relative path |
+| `list_nighty_documents` | List indexed files, titles, categories, and source URLs |
+
+The server also publishes each indexed text file as an MCP resource under the
+`nighty-docs:///` URI scheme. Tool responses include links to the matching files
+on GitHub.
+
+## Client setup
+
+<details>
+<summary><strong>Codex</strong></summary>
+
+```bash
+codex mcp add nightyDocs --url https://nighty-mcp.niggy.lol/mcp
+codex mcp list
+```
+
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+Add the server to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "nightyDocs": {
+      "url": "https://nighty-mcp.niggy.lol/mcp"
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+```bash
+claude mcp add --transport http nightyDocs https://nighty-mcp.niggy.lol/mcp
+```
+
+</details>
+
+<details>
+<summary><strong>Local endpoint</strong></summary>
+
+Replace the hosted URL in any client configuration with:
+
+```text
+http://127.0.0.1:8787/mcp
+```
+
+</details>
+
+## Data flow
+
+```text
+aboveproof/nighty-docs
+        │
+        ▼
+  GitHub ZIP archive
+        │
+        ▼
+ in-memory text index
+        │
+        ├── search
+        ├── fetch
+        └── MCP resources
+```
+
+The process downloads one repository archive and keeps the parsed text in
+memory. The default cache expires after 15 minutes. A failed refresh leaves the
+last loaded copy available and pauses refresh attempts for one minute.
+
+The index accepts Markdown, Python, JavaScript, JSON, TOML, YAML, and plain-text
+files up to 1 MB. The loader rejects archives above 5 MB, archives with more
+than 500 entries, and text payloads above 10 MB. Binary files stay out of the
+index.
+
+## Local setup
+
+Install Node.js 20 or newer.
+
+```bash
+git clone https://github.com/aboveproof/nighty-docs-mcp.git
+cd nighty-docs-mcp
+npm install
+npm run build
+npm start
+```
+
+The process listens on `http://127.0.0.1:8787`. Development mode watches source
+files and restarts the process after a change:
+
+```bash
+npm run dev
+```
+
+## Configuration
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `PORT` | `8787` | HTTP port |
+| `HOST` | `127.0.0.1` | Bind address |
+| `NIGHTY_DOCS_REPOSITORY` | `aboveproof/nighty-docs` | GitHub source repository |
+| `NIGHTY_DOCS_REF` | `main` | Git branch |
+| `CACHE_TTL_MS` | `900000` | Cache lifetime in milliseconds |
+| `RETRY_BACKOFF_MS` | `60000` | Delay after a failed cache refresh |
+| `RATE_LIMIT_MAX` | `120` | Requests allowed per client and window |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate-limit window in milliseconds |
+| `TRUST_PROXY` | unset | Trust proxy client-IP headers outside Vercel |
+
+Containers should set `HOST=0.0.0.0`.
+
+## Deployment
+
+### Vercel
+
+Vercel detects the Express export in [`src/server.ts`](./src/server.ts) and runs
+the application as one function.
+
+1. Import `aboveproof/nighty-docs-mcp` at [vercel.com/new](https://vercel.com/new).
+2. Deploy with the detected project settings.
+3. Add `nighty-mcp.niggy.lol` in the project domain settings.
+4. Create the DNS record shown by Vercel.
+
+Pushes to the production branch create new deployments through the Git
+integration.
+
+The application limits each client to 120 MCP requests per minute. A Vercel WAF
+rule can enforce the same limit before requests reach the function.
+
+### Docker
+
+The image runs as the unprivileged `node` user and listens on port `8787`.
+
+```bash
+docker build -t nighty-docs-mcp .
+docker run --rm -p 8787:8787 nighty-docs-mcp
+```
+
+## Development
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+MCP Inspector can test the HTTP endpoint:
+
+```bash
+npx @modelcontextprotocol/inspector@latest
+```
+
+Use Streamable HTTP with `http://127.0.0.1:8787/mcp`.
+
+## Project scope
+
+This server reads public documentation. It cannot run NightyScripts, connect to
+Discord, modify the source repository, or access a Nighty account.
+
+## Contributing
+
+[`CONTRIBUTING.md`](./CONTRIBUTING.md) covers the development workflow and pull
+request checks. Security reports belong in GitHub's private vulnerability
+reporting form.
+
+## License
+
+The MCP server code uses the [GPL-3.0 License](./LICENSE). Files retrieved from
+`aboveproof/nighty-docs` use that repository's
+[GPL-3.0 license](https://github.com/aboveproof/nighty-docs/blob/main/LICENSE).

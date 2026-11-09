@@ -1,0 +1,49 @@
+{
+  "name": "nighty-docs-mcp",
+  "version": "0.1.0",
+  "description": "Read-only MCP server for the official NightyScript documentation and examples.",
+  "author": "rico",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aboveproof/nighty-docs-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aboveproof/nighty-docs-mcp/issues"
+  },
+  "homepage": "https://github.com/aboveproof/nighty-docs-mcp#readme",
+  "type": "module",
+  "main": "dist/server.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/start.ts",
+    "start": "node dist/start.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "nighty",
+    "nightyscript",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "fflate": "^0.8.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
