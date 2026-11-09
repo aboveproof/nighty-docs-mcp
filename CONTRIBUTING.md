@@ -6,7 +6,7 @@ work. Documentation corrections belong in
 
 ## Setup
 
-Install Node.js 20 or newer.
+Install Node.js 22.
 
 ```bash
 git clone https://github.com/aboveproof/nighty-docs-mcp.git

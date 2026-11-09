@@ -5,7 +5,7 @@
   <p>
     <a href="https://github.com/aboveproof/nighty-docs-mcp/actions/workflows/ci.yml"><img alt="CI status" src="https://github.com/aboveproof/nighty-docs-mcp/actions/workflows/ci.yml/badge.svg"></a>
     <a href="./LICENSE"><img alt="GPL-3.0 license" src="https://img.shields.io/badge/license-GPL--3.0-5865F2.svg"></a>
-    <img alt="Node.js 20 or newer" src="https://img.shields.io/badge/node-%3E%3D20-339933.svg">
+    <img alt="Node.js 22" src="https://img.shields.io/badge/node-22.x-339933.svg">
     <img alt="MCP transport: Streamable HTTP" src="https://img.shields.io/badge/MCP-Streamable_HTTP-F59E0B.svg">
   </p>
 
@@ -128,7 +128,7 @@ index.
 
 ## Local setup
 
-Install Node.js 20 or newer.
+Install Node.js 22.
 
 ```bash
 git clone https://github.com/aboveproof/nighty-docs-mcp.git
