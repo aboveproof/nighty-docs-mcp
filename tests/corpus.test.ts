@@ -140,4 +140,29 @@ describe("NightyDocsCorpus", () => {
     await expect(corpus.getAll()).rejects.toThrow("download limit");
     expect(corpus.getStatus()).toEqual({ status: "unavailable", documents: 0 });
   });
+
+  it("backs off after an initial load failure", async () => {
+    const archive = fixtureArchive();
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000);
+    const fetchImpl = vi.fn(async () => {
+      if (fetchImpl.mock.calls.length === 1) {
+        return new Response("unavailable", { status: 503 });
+      }
+      return new Response(archive, { status: 200 });
+    }) as unknown as typeof fetch;
+    const corpus = new NightyDocsCorpus({ retryBackoffMs: 60_000, fetchImpl });
+
+    try {
+      await expect(corpus.getAll()).rejects.toThrow("GitHub returned 503");
+      await expect(corpus.getAll()).rejects.toThrow("GitHub returned 503");
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+      now.mockReturnValue(61_001);
+      await expect(corpus.getAll()).resolves.toHaveLength(3);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      expect(corpus.getStatus()).toEqual({ status: "ok", documents: 3 });
+    } finally {
+      now.mockRestore();
+    }
+  });
 });

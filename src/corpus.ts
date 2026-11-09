@@ -328,6 +328,7 @@ export class NightyDocsCorpus {
   private loadedAt = 0;
   private retryAfter = 0;
   private refreshFailed = false;
+  private lastFailure: Error | null = null;
   private loading: Promise<NightyDocument[]> | null = null;
 
   constructor(options: CorpusOptions = {}) {
@@ -348,6 +349,9 @@ export class NightyDocsCorpus {
       this.documents && now - this.loadedAt < this.cacheTtlMs;
     if (cacheIsFresh) return this.documents!;
     if (this.documents && now < this.retryAfter) return this.documents;
+    if (!this.documents && this.lastFailure && now < this.retryAfter) {
+      throw this.lastFailure;
+    }
     if (this.loading) return this.loading;
 
     this.loading = this.load().finally(() => {
@@ -404,16 +408,17 @@ export class NightyDocsCorpus {
       this.loadedAt = Date.now();
       this.retryAfter = 0;
       this.refreshFailed = false;
+      this.lastFailure = null;
       return documents;
     } catch (error) {
-      this.refreshFailed = true;
-      if (this.documents) {
-        this.retryAfter = Date.now() + this.retryBackoffMs;
-        return this.documents;
-      }
-      throw new Error(
+      const failure = new Error(
         `Unable to load ${this.repository}@${this.ref}: ${error instanceof Error ? error.message : String(error)}`,
       );
+      this.refreshFailed = true;
+      this.retryAfter = Date.now() + this.retryBackoffMs;
+      this.lastFailure = failure;
+      if (this.documents) return this.documents;
+      throw failure;
     }
   }
 }

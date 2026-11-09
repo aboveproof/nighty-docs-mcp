@@ -16,3 +16,7 @@ Do not post credentials, private URLs, or exploit details in a public issue.
 
 Nighty Docs MCP reads a public GitHub repository and returns text. It does not
 accept credentials, run retrieved code, connect to Discord, or write to GitHub.
+
+The process applies an in-memory request limit. Public serverless deployments
+must add a platform rate-limit rule because function instances do not share
+memory.

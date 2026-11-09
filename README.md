@@ -155,7 +155,7 @@ npm run dev
 | `NIGHTY_DOCS_REF` | `main` | Git branch |
 | `CACHE_TTL_MS` | `900000` | Cache lifetime in milliseconds |
 | `RETRY_BACKOFF_MS` | `60000` | Delay after a failed cache refresh |
-| `RATE_LIMIT_MAX` | `120` | Requests allowed per client and window |
+| `RATE_LIMIT_MAX` | `120` | Requests allowed per client and process instance |
 | `RATE_LIMIT_WINDOW_MS` | `60000` | Rate-limit window in milliseconds |
 | `TRUST_PROXY` | unset | Trust proxy client-IP headers outside Vercel |
 
@@ -172,12 +172,15 @@ the application as one function.
 2. Deploy with the detected project settings.
 3. Add `nighty-mcp.niggy.lol` in the project domain settings.
 4. Create the DNS record shown by Vercel.
+5. Add a Vercel WAF rate-limit rule for `POST /mcp`: 120 requests per 60 seconds per IP, followed by a `429` response.
 
 Pushes to the production branch create new deployments through the Git
 integration.
 
-The application limits each client to 120 MCP requests per minute. A Vercel WAF
-rule can enforce the same limit before requests reach the function.
+The in-process limiter protects local and single-instance deployments. Vercel
+can run several function instances, so the
+[WAF rule](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting)
+enforces the shared public limit before requests reach a function.
 
 ### Docker
 

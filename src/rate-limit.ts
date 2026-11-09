@@ -90,6 +90,7 @@ export function createRateLimitMiddleware(
     response.setHeader("RateLimit-Limit", result.limit);
     response.setHeader("RateLimit-Remaining", result.remaining);
     response.setHeader("RateLimit-Reset", Math.ceil(result.resetAt / 1000));
+    response.setHeader("X-RateLimit-Scope", "process-instance");
 
     if (result.allowed) {
       next();
