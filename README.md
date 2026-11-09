@@ -54,6 +54,52 @@ on GitHub.
 
 ## Client setup
 
+Nighty Docs MCP uses Streamable HTTP and does not require authentication.
+
+### Ask a coding agent to add it
+
+Paste this into Codex, Claude Code, Cursor, OpenCode, or another coding agent
+that can manage its own MCP configuration:
+
+```text
+Add the Nighty Docs MCP server to this client's user-level MCP configuration.
+
+Name: nightyDocs
+Transport: Streamable HTTP
+URL: https://nighty-mcp.niggy.lol/mcp
+Authentication: none
+
+Preserve every existing MCP server and setting. Do not clone the repository or
+start a local process. Use this client's current configuration format, then
+verify the connection and confirm that search, fetch, and
+list_nighty_documents are available. If you cannot change the MCP settings
+yourself, give me the exact manual steps for this client.
+```
+
+ChatGPT requires its web setup screen, so use the ChatGPT steps below instead
+of the agent prompt.
+
+### Manual setup
+
+<details>
+<summary><strong>ChatGPT</strong></summary>
+
+Custom MCP servers are added as plugins in ChatGPT on the web:
+
+1. Open [ChatGPT Plugins](https://chatgpt.com/#settings/Plugins).
+2. Select the plus button, then **Add custom MCP server**.
+3. Enter `Nighty Docs` as the name and
+   `https://nighty-mcp.niggy.lol/mcp` as the server URL.
+4. Choose **No authentication**, review the warning, and create the plugin.
+5. Install the plugin. Type `@` in a conversation and select **Nighty Docs**
+   when it should be used.
+
+See OpenAI's
+[custom MCP server guide](https://developers.openai.com/api/docs/guides/custom-mcp-server)
+for account and workspace availability.
+
+</details>
+
 <details>
 <summary><strong>Codex</strong></summary>
 
@@ -61,6 +107,9 @@ on GitHub.
 codex mcp add nightyDocs --url https://nighty-mcp.niggy.lol/mcp
 codex mcp list
 ```
+
+This adds the hosted server to the shared Codex MCP configuration. The same
+configuration is available to the Codex CLI and Codex app.
 
 </details>
 
@@ -79,14 +128,61 @@ Add the server to `~/.cursor/mcp.json`:
 }
 ```
 
+Save the file, restart Cursor, then open **Customize > MCPs** and confirm that
+`nightyDocs` is connected.
+
 </details>
 
 <details>
 <summary><strong>Claude Code</strong></summary>
 
 ```bash
-claude mcp add --transport http nightyDocs https://nighty-mcp.niggy.lol/mcp
+claude mcp add --transport http nightyDocs --scope user https://nighty-mcp.niggy.lol/mcp
+claude mcp get nightyDocs
 ```
+
+</details>
+
+<details>
+<summary><strong>OpenCode</strong></summary>
+
+```bash
+opencode mcp add nightyDocs --global --url https://nighty-mcp.niggy.lol/mcp
+opencode mcp list
+```
+
+The `--global` flag makes the server available in every project. Leave it out
+to add the server only to the current project.
+
+</details>
+
+<details>
+<summary><strong>Other MCP clients</strong></summary>
+
+Use these connection values in any client that accepts remote Streamable HTTP
+servers:
+
+| Setting | Value |
+| :--- | :--- |
+| Name | `nightyDocs` |
+| Transport | `Streamable HTTP` |
+| URL | `https://nighty-mcp.niggy.lol/mcp` |
+| Authentication | None |
+
+Clients that use the common `mcpServers` format can start with:
+
+```json
+{
+  "mcpServers": {
+    "nightyDocs": {
+      "url": "https://nighty-mcp.niggy.lol/mcp"
+    }
+  }
+}
+```
+
+Some clients require an explicit `type` or use a different top-level key.
+Follow that client's configuration schema when adapting this example.
 
 </details>
 
@@ -100,6 +196,23 @@ http://127.0.0.1:8787/mcp
 ```
 
 </details>
+
+### Try it
+
+After connecting, prompts can refer to the server or its tools directly:
+
+```text
+Use Nighty Docs to find the documentation for event handlers.
+```
+
+```text
+Search Nighty Docs for examples of error handling, then fetch the most relevant
+example and explain it.
+```
+
+```text
+List the available NightyScript documents and group them by category.
+```
 
 ## Data flow
 
