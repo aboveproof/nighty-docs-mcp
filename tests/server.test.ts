@@ -60,6 +60,7 @@ describe("public status page", () => {
       name: "nighty-docs-mcp",
       mcp: "/mcp",
       uptime: expect.stringMatching(/^((\d+d )?(\d+h )?(\d+m )?\d+s)$/),
+      latency: expect.stringMatching(/^\d+ms$/),
     });
   });
 
@@ -84,5 +85,6 @@ describe("public status page", () => {
       ]),
     );
     expect(body.component.components.at(-1).content).toContain('"uptime":');
+    expect(body.component.components.at(-1).content).toContain('"latency":');
   });
 });

@@ -14,6 +14,7 @@ interface HealthPayload {
   status: ReturnType<NightyDocsCorpus["getStatus"]>["status"];
   documents: number;
   uptime: string;
+  latency: string;
   mcp: string;
   source: string;
 }
@@ -43,25 +44,28 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function healthPayload(corpus: NightyDocsCorpus): HealthPayload {
+function healthPayload(corpus: NightyDocsCorpus, latencyMs: number): HealthPayload {
   const status = corpus.getStatus();
   return {
     name: "nighty-docs-mcp",
     status: status.status,
     documents: status.documents,
     uptime: formatUptime(process.uptime()),
+    latency: `${latencyMs}ms`,
     mcp: "/mcp",
     source: SOURCE_URL,
   };
 }
 
 async function refreshedHealthPayload(corpus: NightyDocsCorpus): Promise<HealthPayload> {
+  const startedAt = performance.now();
   try {
     await corpus.getAll();
   } catch {
     // getStatus() carries the unavailable state for the response below.
   }
-  return healthPayload(corpus);
+  const latencyMs = Math.max(0, Math.round(performance.now() - startedAt));
+  return healthPayload(corpus, latencyMs);
 }
 
 export function renderLandingPage(payload: HealthPayload): string {
@@ -70,6 +74,7 @@ export function renderLandingPage(payload: HealthPayload): string {
     `Status: ${payload.status}`,
     `Indexed documents: ${payload.documents}`,
     `Uptime: ${payload.uptime}`,
+    `Latency: ${payload.latency}`,
   ].join("\n");
   const json = JSON.stringify(payload, null, 2);
 
