@@ -8,6 +8,9 @@ import { createRateLimitMiddleware } from "./rate-limit.js";
 const PUBLIC_URL = "https://nighty-mcp.niggy.lol/";
 const SOURCE_URL = "https://github.com/aboveproof/nighty-docs";
 const COMPONENT_EMBED_URL = `${PUBLIC_URL}discord-embed.json`;
+const MCP_REPOSITORY = "aboveproof/nighty-docs-mcp";
+const PROCESS_STARTED_AT = Date.now() - process.uptime() * 1_000;
+let deploymentStartedAtPromise: Promise<number> | undefined;
 
 interface HealthPayload {
   name: string;
@@ -44,13 +47,54 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function healthPayload(corpus: NightyDocsCorpus, latencyMs: number): HealthPayload {
+async function deploymentStartedAt(): Promise<number> {
+  if (deploymentStartedAtPromise) return deploymentStartedAtPromise;
+
+  deploymentStartedAtPromise = (async () => {
+    const commitSha = process.env.VERCEL_GIT_COMMIT_SHA;
+    if (!commitSha) return PROCESS_STARTED_AT;
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${MCP_REPOSITORY}/commits/${encodeURIComponent(commitSha)}`,
+        {
+          headers: {
+            Accept: "application/vnd.github+json",
+            "User-Agent": "nighty-docs-mcp",
+          },
+          signal: AbortSignal.timeout(5_000),
+        },
+      );
+      if (!response.ok) return PROCESS_STARTED_AT;
+
+      const result = (await response.json()) as {
+        commit?: { committer?: { date?: string }; author?: { date?: string } };
+      };
+      const date = result.commit?.committer?.date ?? result.commit?.author?.date;
+      const timestamp = date ? Date.parse(date) : Number.NaN;
+      if (!Number.isFinite(timestamp) || timestamp > Date.now()) {
+        return PROCESS_STARTED_AT;
+      }
+      return timestamp;
+    } catch {
+      return PROCESS_STARTED_AT;
+    }
+  })();
+
+  return deploymentStartedAtPromise;
+}
+
+function healthPayload(
+  corpus: NightyDocsCorpus,
+  latencyMs: number,
+  startedAt: number,
+): HealthPayload {
   const status = corpus.getStatus();
   return {
     name: "nighty-docs-mcp",
     status: status.status,
     documents: status.documents,
-    uptime: formatUptime(process.uptime()),
+    uptime: formatUptime((Date.now() - startedAt) / 1_000),
     latency: `${latencyMs}ms`,
     mcp: "/mcp",
     source: SOURCE_URL,
@@ -59,13 +103,14 @@ function healthPayload(corpus: NightyDocsCorpus, latencyMs: number): HealthPaylo
 
 async function refreshedHealthPayload(corpus: NightyDocsCorpus): Promise<HealthPayload> {
   const startedAt = performance.now();
-  try {
-    await corpus.getAll();
-  } catch {
-    // getStatus() carries the unavailable state for the response below.
-  }
+  const [, deployedAt] = await Promise.all([
+    corpus.getAll().catch(() => {
+      // getStatus() carries the unavailable state for the response below.
+    }),
+    deploymentStartedAt(),
+  ]);
   const latencyMs = Math.max(0, Math.round(performance.now() - startedAt));
-  return healthPayload(corpus, latencyMs);
+  return healthPayload(corpus, latencyMs, deployedAt);
 }
 
 export function renderLandingPage(payload: HealthPayload): string {

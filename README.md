@@ -43,10 +43,11 @@ The hosted service requires no account or API key. Self-hosted instances use the
 same protocol and tools.
 
 The status page advertises a Discord Components V2 link embed containing the
-live health JSON, current server-instance uptime, and server-side response
-latency. Open Graph metadata remains available as a fallback for other
-link-preview clients. Requests to `/` with `Accept: application/json` still
-receive the machine-readable health response.
+live health JSON, current deployment uptime, and server-side response
+latency. On Vercel, uptime is anchored to the deployed Git commit so function
+cold starts do not reset it. Open Graph metadata remains available as a fallback
+for other link-preview clients. Requests to `/` with `Accept: application/json`
+still receive the machine-readable health response.
 
 ## Tools
 
