@@ -7,6 +7,7 @@ import { createRateLimitMiddleware } from "./rate-limit.js";
 
 const PUBLIC_URL = "https://nighty-mcp.niggy.lol/";
 const SOURCE_URL = "https://github.com/aboveproof/nighty-docs";
+const COMPONENT_EMBED_URL = `${PUBLIC_URL}discord-embed.json`;
 
 interface HealthPayload {
   name: string;
@@ -69,6 +70,7 @@ export function renderLandingPage(payload: HealthPayload): string {
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Nighty Docs MCP">
   <meta name="twitter:description" content="${escapeHtml(description)}">
+  <link rel="discord:component-embed" type="application/json" href="${COMPONENT_EMBED_URL}">
   <style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0d12; color: #f4f5f7; }
@@ -87,6 +89,43 @@ export function renderLandingPage(payload: HealthPayload): string {
   </main>
 </body>
 </html>`;
+}
+
+export function createDiscordComponentEmbed(payload: HealthPayload): object {
+  const statusJson = JSON.stringify(payload, null, 2);
+  return {
+    component: {
+      type: 17,
+      accent_color: 0x5865f2,
+      components: [
+        {
+          type: 9,
+          components: [
+            {
+              type: 10,
+              content:
+                "## Nighty Docs MCP\nRead-only MCP access to NightyScript documentation and examples.",
+            },
+          ],
+          accessory: {
+            type: 2,
+            style: 5,
+            label: "View source",
+            url: SOURCE_URL,
+          },
+        },
+        {
+          type: 14,
+          divider: true,
+          spacing: 1,
+        },
+        {
+          type: 10,
+          content: `### Live status\n\`\`\`json\n${statusJson}\n\`\`\``,
+        },
+      ],
+    },
+  };
 }
 
 function positiveInteger(value: string | undefined, fallback: number): number {
@@ -114,6 +153,12 @@ app.get("/health", async (_request: Request, response: Response) => {
   const payload = await refreshedHealthPayload(corpus);
   const statusCode = payload.status === "unavailable" ? 503 : 200;
   response.status(statusCode).json(payload);
+});
+
+app.get("/discord-embed.json", async (_request: Request, response: Response) => {
+  const payload = await refreshedHealthPayload(corpus);
+  const statusCode = payload.status === "unavailable" ? 503 : 200;
+  response.status(statusCode).json(createDiscordComponentEmbed(payload));
 });
 
 const rateLimit = createRateLimitMiddleware(

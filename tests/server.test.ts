@@ -40,6 +40,9 @@ describe("public status page", () => {
     expect(html).toContain('<meta property="og:description"');
     expect(html).toContain('<meta property="og:url" content="https://nighty-mcp.niggy.lol/">');
     expect(html).toContain('<meta name="theme-color" content="#5865F2">');
+    expect(html).toContain(
+      '<link rel="discord:component-embed" type="application/json" href="https://nighty-mcp.niggy.lol/discord-embed.json">',
+    );
     expect(html).toContain("&quot;name&quot;: &quot;nighty-docs-mcp&quot;");
   });
 
@@ -57,5 +60,27 @@ describe("public status page", () => {
       name: "nighty-docs-mcp",
       mcp: "/mcp",
     });
+  });
+
+  it("serves a Components V2 link embed", async () => {
+    const response = await fetch(`${origin}/discord-embed.json`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect(body).toMatchObject({
+      component: {
+        type: 17,
+        accent_color: 0x5865f2,
+      },
+    });
+    expect(body.component.components).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 10,
+          content: expect.stringContaining('"name": "nighty-docs-mcp"'),
+        }),
+      ]),
+    );
   });
 });

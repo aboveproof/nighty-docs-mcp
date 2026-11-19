@@ -36,14 +36,16 @@ and example scripts stored in that repository.
 | MCP | `https://nighty-mcp.niggy.lol/mcp` |
 | Status page | `https://nighty-mcp.niggy.lol/` |
 | Health JSON | `https://nighty-mcp.niggy.lol/health` |
+| Discord component embed | `https://nighty-mcp.niggy.lol/discord-embed.json` |
 | Source documents | [`github.com/aboveproof/nighty-docs`](https://github.com/aboveproof/nighty-docs) |
 
 The hosted service requires no account or API key. Self-hosted instances use the
 same protocol and tools.
 
-The status page includes Open Graph metadata for Discord and other link-preview
-clients. Requests to `/` with `Accept: application/json` still receive the
-machine-readable health response.
+The status page advertises a Discord Components V2 link embed containing the
+live health JSON. Open Graph metadata remains available as a fallback for other
+link-preview clients. Requests to `/` with `Accept: application/json` still
+receive the machine-readable health response.
 
 ## Tools
 
