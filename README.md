@@ -55,9 +55,11 @@ on GitHub.
 ## Built-in NightyScript context
 
 The MCP handshake identifies this as a NightyScript development server. It tells
-compatible clients to treat requests as code for Nighty's embedded Python
-runtime, search the official documentation before drafting, use Nighty's
-injected objects, and avoid unsupported `nighty` or `discord.py` imports.
+compatible clients that Nighty 2.6.2 uses Python 3.14, to treat requests as code
+for Nighty's embedded runtime, and to search the official documentation before
+drafting. It also identifies the native slash-command API, injected objects,
+the correct `Card` layout rules, and unsupported `nighty` or `discord.py`
+imports.
 
 The server also publishes `nighty-docs:///runtime-context`, a short reference
 that clients can read whenever they need the runtime rules again. It explains

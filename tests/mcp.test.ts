@@ -29,6 +29,15 @@ describe("Nighty Docs MCP context", () => {
       expect(client.getInstructions()).toContain(
         "assess the requested behavior itself",
       );
+      expect(client.getInstructions()).toContain(
+        "Nighty 2.6.2 uses Python 3.14",
+      );
+      expect(client.getInstructions()).toContain(
+        "native @slashCommand and slashReply",
+      );
+      expect(client.getInstructions()).toContain(
+        "Card does not accept a type argument",
+      );
 
       const resources = await client.listResources();
       expect(resources.resources).toEqual(
@@ -49,6 +58,12 @@ describe("Nighty Docs MCP context", () => {
       });
       expect("text" in context.contents[0] && context.contents[0].text).toContain(
         "NightyScript is the scripting system built into Nighty.",
+      );
+      expect("text" in context.contents[0] && context.contents[0].text).toContain(
+        "Nighty 2.6.2 runs NightyScript on Python 3.14.",
+      );
+      expect("text" in context.contents[0] && context.contents[0].text).toContain(
+        "`Card` does not accept `type`.",
       );
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
