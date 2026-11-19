@@ -1,6 +1,6 @@
 {
   "name": "nighty-docs-mcp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Read-only MCP server for the official NightyScript documentation and examples.",
   "author": "rico",
   "repository": {

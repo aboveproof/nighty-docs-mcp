@@ -20,7 +20,7 @@ export async function createNightyDocsServer(
   const server = new McpServer(
     {
       name: "nighty-docs",
-      version: "0.3.1",
+      version: "0.3.2",
     },
     {
       instructions: NIGHTYSCRIPT_SERVER_INSTRUCTIONS,

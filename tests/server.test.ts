@@ -59,6 +59,7 @@ describe("public status page", () => {
     await expect(healthResponse.json()).resolves.toMatchObject({
       name: "nighty-docs-mcp",
       mcp: "/mcp",
+      uptime: expect.stringMatching(/^((\d+d )?(\d+h )?(\d+m )?\d+s)$/),
     });
   });
 
@@ -71,7 +72,7 @@ describe("public status page", () => {
     expect(body).toMatchObject({
       component: {
         type: 17,
-        accent_color: 0x5865f2,
+        accent_color: null,
       },
     });
     expect(body.component.components).toEqual(
@@ -82,5 +83,6 @@ describe("public status page", () => {
         }),
       ]),
     );
+    expect(body.component.components.at(-1).content).toContain('"uptime":');
   });
 });

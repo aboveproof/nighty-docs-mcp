@@ -43,9 +43,9 @@ The hosted service requires no account or API key. Self-hosted instances use the
 same protocol and tools.
 
 The status page advertises a Discord Components V2 link embed containing the
-live health JSON. Open Graph metadata remains available as a fallback for other
-link-preview clients. Requests to `/` with `Accept: application/json` still
-receive the machine-readable health response.
+live health JSON and current server-instance uptime. Open Graph metadata remains
+available as a fallback for other link-preview clients. Requests to `/` with
+`Accept: application/json` still receive the machine-readable health response.
 
 ## Tools
 

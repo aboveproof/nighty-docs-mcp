@@ -13,8 +13,25 @@ interface HealthPayload {
   name: string;
   status: ReturnType<NightyDocsCorpus["getStatus"]>["status"];
   documents: number;
+  uptime: string;
   mcp: string;
   source: string;
+}
+
+function formatUptime(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const days = Math.floor(seconds / 86_400);
+  const hours = Math.floor((seconds % 86_400) / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+  const remainingSeconds = seconds % 60;
+  return [
+    days > 0 ? `${days}d` : "",
+    hours > 0 ? `${hours}h` : "",
+    minutes > 0 ? `${minutes}m` : "",
+    `${remainingSeconds}s`,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function escapeHtml(value: string): string {
@@ -32,6 +49,7 @@ function healthPayload(corpus: NightyDocsCorpus): HealthPayload {
     name: "nighty-docs-mcp",
     status: status.status,
     documents: status.documents,
+    uptime: formatUptime(process.uptime()),
     mcp: "/mcp",
     source: SOURCE_URL,
   };
@@ -51,6 +69,7 @@ export function renderLandingPage(payload: HealthPayload): string {
     "Read-only MCP access to NightyScript documentation and examples.",
     `Status: ${payload.status}`,
     `Indexed documents: ${payload.documents}`,
+    `Uptime: ${payload.uptime}`,
   ].join("\n");
   const json = JSON.stringify(payload, null, 2);
 
@@ -96,7 +115,7 @@ export function createDiscordComponentEmbed(payload: HealthPayload): object {
   return {
     component: {
       type: 17,
-      accent_color: 0x5865f2,
+      accent_color: null,
       components: [
         {
           type: 9,
