@@ -5,6 +5,90 @@ import { NightyDocsCorpus } from "./corpus.js";
 import { createNightyDocsServer } from "./mcp.js";
 import { createRateLimitMiddleware } from "./rate-limit.js";
 
+const PUBLIC_URL = "https://nighty-mcp.niggy.lol/";
+const SOURCE_URL = "https://github.com/aboveproof/nighty-docs";
+
+interface HealthPayload {
+  name: string;
+  status: ReturnType<NightyDocsCorpus["getStatus"]>["status"];
+  documents: number;
+  mcp: string;
+  source: string;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function healthPayload(corpus: NightyDocsCorpus): HealthPayload {
+  const status = corpus.getStatus();
+  return {
+    name: "nighty-docs-mcp",
+    status: status.status,
+    documents: status.documents,
+    mcp: "/mcp",
+    source: SOURCE_URL,
+  };
+}
+
+async function refreshedHealthPayload(corpus: NightyDocsCorpus): Promise<HealthPayload> {
+  try {
+    await corpus.getAll();
+  } catch {
+    // getStatus() carries the unavailable state for the response below.
+  }
+  return healthPayload(corpus);
+}
+
+export function renderLandingPage(payload: HealthPayload): string {
+  const description = [
+    "Read-only MCP access to NightyScript documentation and examples.",
+    `Status: ${payload.status}`,
+    `Indexed documents: ${payload.documents}`,
+  ].join("\n");
+  const json = JSON.stringify(payload, null, 2);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nighty Docs MCP</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <meta name="theme-color" content="#5865F2">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Nighty Docs MCP">
+  <meta property="og:title" content="Nighty Docs MCP">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${PUBLIC_URL}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Nighty Docs MCP">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0d12; color: #f4f5f7; }
+    main { width: min(680px, calc(100% - 40px)); }
+    p { color: #aeb4c0; line-height: 1.6; }
+    pre { overflow-x: auto; padding: 20px; border: 1px solid #292e3a; border-radius: 12px; background: #12151d; color: #d7dcff; }
+    a { color: #aeb8ff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Nighty Docs MCP</h1>
+    <p>Read-only MCP access to the NightyScript documentation and examples.</p>
+    <pre>${escapeHtml(json)}</pre>
+    <p><a href="/mcp">MCP endpoint</a> · <a href="/health">Health JSON</a> · <a href="${SOURCE_URL}">Source documentation</a></p>
+  </main>
+</body>
+</html>`;
+}
+
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
@@ -16,16 +100,20 @@ const app = createMcpExpressApp({
   host: publicBinding ? "0.0.0.0" : "127.0.0.1",
 });
 
-app.get("/", async (_request: Request, response: Response) => {
-  const corpusStatus = corpus.getStatus();
-  const statusCode = corpusStatus.status === "unavailable" ? 503 : 200;
-  response.status(statusCode).json({
-    name: "nighty-docs-mcp",
-    status: corpusStatus.status,
-    documents: corpusStatus.documents,
-    mcp: "/mcp",
-    source: "https://github.com/aboveproof/nighty-docs",
-  });
+app.get("/", async (request: Request, response: Response) => {
+  const payload = await refreshedHealthPayload(corpus);
+  const statusCode = payload.status === "unavailable" ? 503 : 200;
+  if (request.accepts(["html", "json"]) === "json") {
+    response.status(statusCode).json(payload);
+    return;
+  }
+  response.status(statusCode).type("html").send(renderLandingPage(payload));
+});
+
+app.get("/health", async (_request: Request, response: Response) => {
+  const payload = await refreshedHealthPayload(corpus);
+  const statusCode = payload.status === "unavailable" ? 503 : 200;
+  response.status(statusCode).json(payload);
 });
 
 const rateLimit = createRateLimitMiddleware(

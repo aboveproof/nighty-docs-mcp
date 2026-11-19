@@ -34,11 +34,16 @@ and example scripts stored in that repository.
 | Service | URL |
 | :--- | :--- |
 | MCP | `https://nighty-mcp.niggy.lol/mcp` |
-| Health check | `https://nighty-mcp.niggy.lol/` |
+| Status page | `https://nighty-mcp.niggy.lol/` |
+| Health JSON | `https://nighty-mcp.niggy.lol/health` |
 | Source documents | [`github.com/aboveproof/nighty-docs`](https://github.com/aboveproof/nighty-docs) |
 
 The hosted service requires no account or API key. Self-hosted instances use the
 same protocol and tools.
+
+The status page includes Open Graph metadata for Discord and other link-preview
+clients. Requests to `/` with `Accept: application/json` still receive the
+machine-readable health response.
 
 ## Tools
 
